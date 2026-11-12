@@ -251,9 +251,13 @@ def render_affiliate_cards(niche: str, affiliate_links: dict) -> str:
         return ""
     cards = []
     for item in items:
+        img_tag = ""
+        if item.get("image_url"):
+            img_tag = f"""<div class="deal-img-wrapper"><img src="{item.get('image_url')}" alt="{item.get('name')}" loading="lazy" class="deal-img"></div>"""
         cards.append(
             f"""
             <div class="deal-card">
+                {img_tag}
                 <span class="deal-badge">{item.get('badge', 'Recommended')}</span>
                 <h4>{item.get('name')}</h4>
                 <p>{item.get('description', '')}</p>
@@ -277,6 +281,9 @@ def render_affiliate_cards(niche: str, affiliate_links: dict) -> str:
 def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date_str: str, cfg: dict) -> str:
     site_title = cfg["system"].get("site_title", "Tech & Smart Living Reviews")
     deals_section = render_affiliate_cards(niche, cfg.get("affiliate_links", {}))
+    hero_img_url = cfg.get("niche_hero_images", {}).get(
+        niche, "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80"
+    )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -288,11 +295,12 @@ def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date
         :root {{ --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8; --cta: #f97316; }}
         * {{ box-sizing: border-box; }}
         body {{ margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; }}
-        header {{ border-bottom: 1px solid #334155; padding: 1.2rem 1.5rem; background: rgba(15,23,42,0.9); position: sticky; top: 0; backdrop-filter: blur(8px); }}
+        header {{ border-bottom: 1px solid #334155; padding: 1.2rem 1.5rem; background: rgba(15,23,42,0.9); position: sticky; top: 0; backdrop-filter: blur(8px); z-index: 10; }}
         .nav {{ max-width: 860px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }}
         .brand {{ color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.15rem; }}
         .back-link {{ color: var(--accent); text-decoration: none; font-size: 0.95rem; }}
-        main {{ max-width: 860px; margin: 2.5rem auto; padding: 0 1.5rem 4rem; }}
+        main {{ max-width: 860px; margin: 2rem auto; padding: 0 1.5rem 4rem; }}
+        .hero-banner {{ width: 100%; height: 360px; object-fit: cover; border-radius: 16px; margin-bottom: 2rem; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }}
         .meta {{ display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; font-size: 0.85rem; color: var(--muted); }}
         .badge {{ background: rgba(56,189,248,0.15); color: var(--accent); padding: 0.25rem 0.7rem; border-radius: 999px; font-weight: 600; }}
         article {{ background: var(--card); padding: 2.5rem; border-radius: 16px; border: 1px solid #334155; }}
@@ -302,8 +310,11 @@ def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date
         a {{ color: var(--accent); }}
         .deals-box {{ margin-top: 2.5rem; padding: 1.75rem; background: rgba(15,23,42,0.7); border: 1px solid #38bdf8; border-radius: 14px; }}
         .deals-box h3 {{ margin-top: 0; color: #fff; }}
-        .deals-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem; }}
+        .deals-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem; margin-top: 1.2rem; }}
         .deal-card {{ background: var(--card); padding: 1.25rem; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }}
+        .deal-img-wrapper {{ width: 100%; height: 160px; border-radius: 8px; overflow: hidden; margin-bottom: 0.85rem; background: #0f172a; display: flex; align-items: center; justify-content: center; }}
+        .deal-img {{ width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }}
+        .deal-card:hover .deal-img {{ transform: scale(1.05); }}
         .deal-badge {{ align-self: flex-start; background: rgba(249,115,22,0.2); color: #fb923c; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; margin-bottom: 0.5rem; }}
         .deal-card h4 {{ margin: 0.4rem 0; font-size: 1.05rem; color: #fff; }}
         .deal-card p {{ font-size: 0.9rem; color: var(--muted); margin: 0.4rem 0 1rem; }}
@@ -321,6 +332,7 @@ def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date
         </div>
     </header>
     <main>
+        <img src="{hero_img_url}" alt="{niche} Overview" class="hero-banner" loading="lazy">
         <article>
             <div class="meta">
                 <span class="badge">{niche}</span>
@@ -342,16 +354,22 @@ def rebuild_site_index(manifest: list, cfg: dict):
     site_desc = cfg["system"].get("site_description", "Expert reviews, smart home automation guides, and developer productivity tools.")
     cards_html = []
     for item in manifest:
+        img_html = ""
+        if item.get("image_url"):
+            img_html = f"""<img src="{item.get('image_url')}" alt="{item.get('title')}" class="card-thumb" loading="lazy">"""
         cards_html.append(
             f"""
             <a href="articles/{item['filename']}" class="card">
-                <div class="card-meta">
-                    <span class="badge">{item['niche']}</span>
-                    <span>{item['date']}</span>
+                {img_html}
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span class="badge">{item['niche']}</span>
+                        <span>{item['date']}</span>
+                    </div>
+                    <h2>{item['title']}</h2>
+                    <p>{item['excerpt']}</p>
+                    <span class="read-more">Read Full Guide &rarr;</span>
                 </div>
-                <h2>{item['title']}</h2>
-                <p>{item['excerpt']}</p>
-                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             """
         )
@@ -371,14 +389,16 @@ def rebuild_site_index(manifest: list, cfg: dict):
         .hero h1 {{ font-size: 2.5rem; margin: 0 0 0.75rem; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
         .hero p {{ color: var(--muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }}
         main {{ max-width: 1040px; margin: 3rem auto; padding: 0 1.5rem 4rem; }}
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1.5rem; }}
-        .card {{ background: var(--card); border: 1px solid #334155; border-radius: 16px; padding: 1.75rem; text-decoration: none; color: var(--text); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, border-color 0.2s; }}
+        .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1.75rem; }}
+        .card {{ background: var(--card); border: 1px solid #334155; border-radius: 16px; overflow: hidden; text-decoration: none; color: var(--text); display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; }}
         .card:hover {{ transform: translateY(-4px); border-color: var(--accent); }}
+        .card-thumb {{ width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid #334155; }}
+        .card-content {{ padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }}
         .card-meta {{ display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }}
         .badge {{ background: rgba(56,189,248,0.15); color: var(--accent); padding: 0.2rem 0.65rem; border-radius: 999px; font-weight: 600; }}
-        .card h2 {{ font-size: 1.3rem; margin: 0.25rem 0 0.75rem; color: #fff; line-height: 1.35; }}
+        .card h2 {{ font-size: 1.25rem; margin: 0.25rem 0 0.75rem; color: #fff; line-height: 1.35; }}
         .card p {{ color: var(--muted); font-size: 0.95rem; margin: 0 0 1.25rem; }}
-        .read-more {{ color: var(--accent); font-weight: 600; font-size: 0.9rem; }}
+        .read-more {{ color: var(--accent); font-weight: 600; font-size: 0.9rem; margin-top: auto; }}
         footer {{ text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid #334155; }}
     </style>
 </head>
@@ -533,6 +553,9 @@ def publish_content(html_content: str, niche: str, cfg: dict):
 
     manifest = load_manifest()
     manifest = [m for m in manifest if m.get("filename") != filename]
+    hero_img_url = cfg.get("niche_hero_images", {}).get(
+        niche, "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80"
+    )
     manifest.insert(
         0,
         {
@@ -541,6 +564,7 @@ def publish_content(html_content: str, niche: str, cfg: dict):
             "niche": niche,
             "date": date_str,
             "filename": filename,
+            "image_url": hero_img_url,
         },
     )
     save_manifest(manifest)

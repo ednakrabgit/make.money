@@ -1,6 +1,6 @@
 ﻿system:
   name: "Antigravity Autonomous Content Pipeline"
-  version: "2.1.0"
+  version: "2.2.0"
   timezone: "Asia/Bangkok"
   interval_minutes: 20
   site_url: "https://ednakrabgit.github.io/review"
@@ -19,8 +19,8 @@ credit_guard:
   billing_account: "billingAccounts/018618-DCC1D7-B99500"
   total_free_credits_thb: 42704.00
   initial_used_credits_thb: 7732.00
-  safety_reserve_thb: 500.00
-  max_pipeline_credit_budget_thb: 34472.00
+  safety_reserve_thb: 50.00
+  max_pipeline_credit_budget_thb: 34922.00
 
 ai_engine:
   provider: "google"
@@ -46,6 +46,11 @@ gcp:
   gcs_articles_prefix: "articles"
   gcs_logs_prefix: "logs"
 
+niche_hero_images:
+  "Smart Home Automation": "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80"
+  "Software Development Tools": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80"
+  "Developer Productivity Hacks": "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80"
+
 content_settings:
   language: "English"
   word_count_target: 900
@@ -70,40 +75,49 @@ affiliate_links:
     - name: "TP-Link Tapo P100 Mini Smart Wi-Fi Plug"
       url: "https://s.shopee.co.th/5q9gwkXjRg"
       badge: "Best Seller • Voice Control"
+      image_url: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=800&q=80"
       description: "Compact smart Wi-Fi plug compatible with Amazon Alexa and Google Assistant for effortless home automation."
     - name: "TP-Link Tapo P110M Matter Smart Wi-Fi Plug (Energy Monitoring)"
       url: "https://s.shopee.co.th/5q9gwrVFU4"
       badge: "Matter Certified • Energy Tracker"
+      image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80"
       description: "Real-time power consumption monitoring with universal Matter smart home compatibility."
     - name: "TP-Link Tapo H500 Smart HomeBase Ecosystem Hub"
       url: "https://s.shopee.co.th/3g5CN2dVrd"
       badge: "Smart Hub • Up to 64 Sensors"
+      image_url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80"
       description: "Centralized smart home security and automation hub supporting up to 16 Tapo cameras and 64 smart sensors."
   "Software Development Tools":
     - name: "Keychron K8 Ultra 8K Wireless Custom Mechanical Keyboard (TKL)"
       url: "https://s.shopee.co.th/9pfpikXUKT"
       badge: "Developer Favorite • 80% TKL"
+      image_url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80"
       description: "Ultra-responsive wireless mechanical keyboard with hot-swappable switches built for long coding sessions."
     - name: "Logitech MX Master 3S Performance Wireless Mouse"
       url: "https://s.shopee.co.th/60T79oF8xp"
       badge: "8000 DPI • Quiet Clicks"
+      image_url: "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png"
       description: "Ergonomic wireless developer mouse with MagSpeed electromagnetic scrolling and any-surface glass tracking."
     - name: "Keychron R5 96% Wireless Mechanical Keyboard"
       url: "https://s.shopee.co.th/4qH9lX5DYD"
       badge: "Full Numpad • Compact 96%"
+      image_url: "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=800&q=80"
       description: "Tactile wireless mechanical keyboard featuring a compact 96% layout ideal for developers and data engineers."
   "Developer Productivity Hacks":
     - name: "Logitech MX Master 3S Performance Ergonomic Mouse"
       url: "https://s.shopee.co.th/60T79oF8xp"
       badge: "Top Productivity Pick"
+      image_url: "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png"
       description: "Boost coding and workflow speed with customizable app-specific buttons and ultra-fast MagSpeed scrolling."
     - name: "Keychron R5 96% Wireless Mechanical Keyboard"
       url: "https://s.shopee.co.th/4qH9lX5DYD"
       badge: "Wireless Multi-Device"
+      image_url: "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=800&q=80"
       description: "Switch seamlessly between laptop, desktop, and tablet with ergonomic mechanical key switches."
     - name: "TP-Link Tapo P110M Smart Desk Power & Energy Monitor"
       url: "https://s.shopee.co.th/5q9gwrVFU4"
       badge: "Smart Home Office"
+      image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80"
       description: "Automate your home office lighting and monitor workstation power usage directly from your phone."
 
 logging:
