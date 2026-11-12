@@ -1,0 +1,150 @@
+﻿google-genai
+google-cloud-storage
+requests
+pyyaml
+python-dotenv
+
+
+
+# Master Prompt: Autonomous Content Pipeline (Antigravity Execution)
+
+## 1. Project Context & Goal
+- **Project Path:** E:\app\make.money\1
+- **Objective:** Build a fully autonomous automated content pipeline running daily at 18:00 to generate and publish SEO-optimized articles using Google AI Pro, targeting passive income via Affiliate / Ad-supported platforms without manual intervention.
+- **Role:** Autonomous Agent Execution (User acts strictly as Supervisor).
+
+## 2. Tech Stack & Tools
+- **Language:** Python 3.x
+- **APIs & Libraries:** `google-genai` (Gemini 2.5 Pro), `requests`, `pyyaml`, `python-dotenv`
+- **Configuration Files:** `.env`, `config.yaml`
+
+## 3. Project Structure & Existing Files
+Ensure all these files exist in `E:\app\make.money\1`:
+
+### A. File: .env
+GEMINI_API_KEY="your_actual_gemini_api_key_here"
+TARGET_API_URL="https://your-blog-site.com/wp-json/wp/v2/posts"
+TARGET_API_TOKEN="your_platform_bearer_token_or_application_password"
+TELEGRAM_BOT_TOKEN=""
+TELEGRAM_CHAT_ID=""
+
+### B. File: config.yaml
+system:
+  name: "Antigravity Autonomous Content Pipeline"
+  version: "1.0.0"
+  timezone: "Asia/Bangkok"
+  execution_time: "18:00"
+
+ai_engine:
+  provider: "google"
+  model: "gemini-2.5-pro"
+  temperature: 0.7
+  max_output_tokens: 2000
+
+content_settings:
+  language: "English"
+  word_count_target: 900
+  niches:
+    - "Software Development Tools"
+    - "Smart Home Automation"
+    - "Developer Productivity Hacks"
+  default_post_status: "draft"
+
+logging:
+  level: "INFO"
+  save_to_file: true
+  log_path: "./logs/pipeline.log"
+
+### C. File: requirements.txt
+google-genai
+requests
+pyyaml
+python-dotenv
+
+### D. File: auto_publisher.py
+import os
+import yaml
+import requests
+import random
+from datetime import datetime
+from pathlib import Path
+from dotenv import load_dotenv
+from google import genai
+
+PROJECT_DIR = Path(r"E:\app\make.money\1")
+load_dotenv(PROJECT_DIR / ".env")
+
+config_path = PROJECT_DIR / "config.yaml"
+with open(config_path, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+TARGET_API_URL = os.getenv("TARGET_API_URL")
+TARGET_API_TOKEN = os.getenv("TARGET_API_TOKEN")
+
+AI_MODEL = config["ai_engine"]["model"]
+NICHES = config["content_settings"]["niches"]
+DEFAULT_STATUS = config["content_settings"]["default_post_status"]
+LOG_PATH = PROJECT_DIR / config["logging"]["log_path"]
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+def log_message(message: str):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_line = f"[{timestamp}] {message}"
+    print(log_line)
+    with open(LOG_PATH, "a", encoding="utf-8") as log_file:
+        log_file.write(log_line + "\n")
+
+def generate_article():
+    log_message("Connecting to Google AI Pro...")
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    selected_niche = random.choice(NICHES)
+    prompt = (
+        f"Write an SEO-optimized, in-depth article in English (approx 900 words) "
+        f"focusing on the niche: '{selected_niche}'. "
+        f"Include an engaging title, clear subheadings, and a natural recommendation section "
+        f"with placeholder affiliate links. Format output in clean HTML."
+    )
+    try:
+        response = client.models.generate_content(model=AI_MODEL, contents=prompt)
+        log_message("Article generated successfully!")
+        return response.text
+    except Exception as e:
+        log_message(f"Generation error: {e}")
+        return None
+
+def publish_content(html_content):
+    if not html_content:
+        log_message("No content to publish.")
+        return False
+    if not TARGET_API_URL or "your-blog-site.com" in TARGET_API_URL:
+        output_file = PROJECT_DIR / f"draft_post_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
+        log_message(f"Fallback: Saved draft to {output_file}")
+        return True
+
+    headers = {"Authorization": f"Bearer {TARGET_API_TOKEN}", "Content-Type": "application/json"}
+    payload = {"title": f"Automated Insight - {datetime.now().strftime('%Y-%m-%d %H:%M')}", "content": html_content, "status": DEFAULT_STATUS}
+    try:
+        response = requests.post(TARGET_API_URL, json=payload, headers=headers, timeout=30)
+        if response.status_code in [200, 201]:
+            log_message("Published successfully via API!")
+            return True
+        else:
+            log_message(f"Publish failed: {response.status_code} - {response.text}")
+            return False
+    except Exception as e:
+        log_message(f"API connection error: {e}")
+        return False
+
+if __name__ == "__main__":
+    log_message("=== Autonomous Pipeline Execution Started ===")
+    article = generate_article()
+    success = publish_content(article)
+    log_message("=== Pipeline Execution Finished ===")
+
+## 4. Immediate Action Required for Antigravity
+1. Verify directory `E:\app\make.money\1` and ensure all 4 files (`.env`, `config.yaml`, `requirements.txt`, `auto_publisher.py`) are fully written.
+2. Install dependencies: `pip install -r requirements.txt`
+3. Test execution: `python auto_publisher.py`

@@ -1,0 +1,33 @@
+﻿system:
+  name: "Antigravity Autonomous Content Pipeline"
+  version: "1.0.0"
+  timezone: "Asia/Bangkok"
+  execution_time: "18:00"
+
+ai_engine:
+  provider: "google"
+  model: "gemini-2.5-pro"
+  fallback_model: "gemini-3.6-flash"
+  temperature: 0.7
+  max_output_tokens: 8192
+
+gcp:
+  project_id: "project-86010b3e-ea84-4c5a-8ec"
+  location: "us-central1"
+  gcs_bucket: "make-money-pipeline-86010b3e"
+  gcs_articles_prefix: "articles"
+  gcs_logs_prefix: "logs"
+
+content_settings:
+  language: "English"
+  word_count_target: 900
+  niches:
+    - "Software Development Tools"
+    - "Smart Home Automation"
+    - "Developer Productivity Hacks"
+  default_post_status: "draft"
+
+logging:
+  level: "INFO"
+  save_to_file: true
+  log_path: "./logs/pipeline.log"
