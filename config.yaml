@@ -1,8 +1,11 @@
 ﻿system:
   name: "Antigravity Autonomous Content Pipeline"
-  version: "1.0.0"
+  version: "1.1.0"
   timezone: "Asia/Bangkok"
   execution_time: "18:00"
+  site_url: "https://ednakrabgit.github.io/make.money"
+  site_title: "Tech & Smart Living Insights"
+  site_description: "Expert reviews, smart home automation guides, and developer productivity tools."
 
 ai_engine:
   provider: "google"
@@ -25,7 +28,37 @@ content_settings:
     - "Software Development Tools"
     - "Smart Home Automation"
     - "Developer Productivity Hacks"
-  default_post_status: "draft"
+  default_post_status: "publish"
+  auto_push_github_pages: true
+
+affiliate_links:
+  "Software Development Tools":
+    - name: "PartnerStack Top SaaS & Developer Tools"
+      url: "https://dash.partnerstack.com/marketplace"
+      badge: "SaaS Partner Deal"
+      description: "Explore top-rated cloud, AI, and developer tools for modern engineering teams."
+    - name: "Mechanical Keyboards & Coding Desk Setup (Shopee)"
+      url: "https://shopee.co.th/search?keyword=mechanical%20keyboard%20wireless"
+      badge: "Shopee Deal"
+      description: "Upgrade your coding workflow with wireless mechanical keyboards and ergonomic gear."
+  "Smart Home Automation":
+    - name: "Smart Home Wi-Fi Plugs, Switches & Hubs (Shopee)"
+      url: "https://shopee.co.th/search?keyword=smart%20home%20tuya%20wifi"
+      badge: "Shopee Best Seller"
+      description: "Automate your lighting, appliances, and energy monitoring with Tuya/Matter smart devices."
+    - name: "Smart Security Cameras & Sensors (Shopee)"
+      url: "https://shopee.co.th/search?keyword=smart%20wifi%20camera"
+      badge: "Top Pick"
+      description: "24/7 smart motion alerts and remote home monitoring right from your phone."
+  "Developer Productivity Hacks":
+    - name: "Ergonomic Developer Desk & Monitor Accessories (Shopee)"
+      url: "https://shopee.co.th/search?keyword=ergonomic%20monitor%20arm%20desk"
+      badge: "Shopee Choice"
+      description: "Boost deep-work focus with dual monitor arms, desk lamps, and ergonomic accessories."
+    - name: "AI & Productivity Software Stack (PartnerStack)"
+      url: "https://dash.partnerstack.com/marketplace"
+      badge: "Featured Software"
+      description: "Automate repetitive tasks and documentation with AI-powered productivity suites."
 
 logging:
   level: "INFO"
