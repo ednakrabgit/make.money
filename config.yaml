@@ -63,7 +63,7 @@ content_settings:
     - "2026 Ultimate Upgrade Guide on a Budget"
     - "Troubleshooting & Optimization Masterclass"
   default_post_status: "publish"
-  auto_push_github_pages: true
+  auto_push_github_pages: false
 
 affiliate_links:
   "Smart Home Automation":
