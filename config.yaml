@@ -3,8 +3,14 @@
   version: "1.1.0"
   timezone: "Asia/Bangkok"
   execution_time: "18:00"
-  site_url: "https://ednakrabgit.github.io/make.money"
-  site_title: "Tech & Smart Living Insights"
+  site_url: "https://ednakrabgit.github.io/review"
+  mirror_site_urls:
+    - "https://ednakrabgit.github.io/review"
+    - "https://ednakrabgit.github.io/make.money"
+  git_remotes:
+    - "origin"
+    - "review"
+  site_title: "Tech & Smart Living Reviews"
   site_description: "Expert reviews, smart home automation guides, and developer productivity tools."
 
 ai_engine:

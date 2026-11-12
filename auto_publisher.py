@@ -337,8 +337,13 @@ def push_to_github_pages(commit_msg: str):
         status = subprocess.run(["git", "status", "--porcelain", "docs/"], cwd=PROJECT_DIR, capture_output=True, text=True)
         if status.stdout.strip():
             subprocess.run(["git", "commit", "-m", commit_msg], cwd=PROJECT_DIR, check=True, capture_output=True)
-            subprocess.run(["git", "push", "origin", "main"], cwd=PROJECT_DIR, check=True, capture_output=True)
-            log_message(f"Published to GitHub Pages repository ({SITE_URL})!")
+        remotes = config.get("system", {}).get("git_remotes", ["origin", "review"])
+        for remote_name in remotes:
+            res = subprocess.run(["git", "push", remote_name, "main"], cwd=PROJECT_DIR, capture_output=True, text=True)
+            if res.returncode == 0:
+                log_message(f"Published to GitHub Pages remote '{remote_name}'!")
+            else:
+                log_message(f"GitHub Pages push warning ({remote_name}): {res.stderr.strip()}")
     except Exception as e:
         log_message(f"GitHub Pages git push warning: {e}")
 
