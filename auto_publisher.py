@@ -10,6 +10,8 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
+import google.auth
+import google.auth.transport.requests
 from google import genai
 from google.genai import types
 from google.cloud import storage
@@ -38,6 +40,7 @@ DOCS_DIR = PROJECT_DIR / "docs"
 ARTICLES_DIR = DOCS_DIR / "articles"
 MANIFEST_PATH = DOCS_DIR / "articles.json"
 LOG_PATH = PROJECT_DIR / config["logging"]["log_path"]
+CREDIT_LEDGER_PATH = PROJECT_DIR / "logs" / "credit_ledger.json"
 
 LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 ARTICLES_DIR.mkdir(parents=True, exist_ok=True)
@@ -49,6 +52,140 @@ def log_message(message: str):
     print(log_line, flush=True)
     with open(LOG_PATH, "a", encoding="utf-8") as log_file:
         log_file.write(log_line + "\n")
+
+
+def load_credit_ledger(cfg: dict) -> dict:
+    cg = cfg.get("credit_guard", {})
+    total_thb = float(cg.get("total_free_credits_thb", 42704.0))
+    initial_used_thb = float(cg.get("initial_used_credits_thb", 7732.0))
+    safety_reserve_thb = float(cg.get("safety_reserve_thb", 500.0))
+
+    if CREDIT_LEDGER_PATH.exists():
+        try:
+            with open(CREDIT_LEDGER_PATH, "r", encoding="utf-8") as f:
+                ledger = json.load(f)
+                ledger["total_free_credits_thb"] = total_thb
+                ledger["safety_reserve_thb"] = safety_reserve_thb
+                return ledger
+        except Exception:
+            pass
+
+    ledger = {
+        "total_free_credits_thb": total_thb,
+        "initial_used_credits_thb": initial_used_thb,
+        "pipeline_used_thb": 0.0,
+        "remaining_free_credits_thb": round(total_thb - initial_used_thb, 4),
+        "safety_reserve_thb": safety_reserve_thb,
+        "articles_generated": 0,
+        "last_checked": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "status": "ACTIVE_FREE_CREDIT",
+    }
+    save_credit_ledger(ledger)
+    return ledger
+
+
+def save_credit_ledger(ledger: dict):
+    with open(CREDIT_LEDGER_PATH, "w", encoding="utf-8") as f:
+        json.dump(ledger, f, indent=2, ensure_ascii=False)
+
+
+def stop_pipeline_permanently(reason: str):
+    log_message(f"[CREDIT GUARD EMERGENCY STOP] {reason}")
+    log_message("[CREDIT GUARD] Disabling Windows Scheduled Task 'AntigravityContentPipeline' to prevent any paid usage...")
+    subprocess.run(
+        ["schtasks", "/Change", "/TN", "AntigravityContentPipeline", "/DISABLE"],
+        capture_output=True,
+    )
+    sys.exit(0)
+
+
+def check_credit_guard(cfg: dict) -> bool:
+    cg = cfg.get("credit_guard", {})
+    if not cg.get("enabled", True):
+        return True
+
+    ledger = load_credit_ledger(cfg)
+    remaining = float(ledger.get("remaining_free_credits_thb", 0.0))
+    reserve = float(cg.get("safety_reserve_thb", 500.0))
+    total = float(ledger.get("total_free_credits_thb", 42704.0))
+    used_total = round(total - remaining, 2)
+
+    log_message(
+        f"[Credit Guard] Free Credit Status: Used ฿{used_total:,.2f} / ฿{total:,.2f} | "
+        f"Remaining Free Credit: ฿{remaining:,.2f} (Safety Stop Reserve: ฿{reserve:,.2f})"
+    )
+
+    if remaining <= reserve:
+        ledger["status"] = "STOPPED_CREDIT_LIMIT_REACHED"
+        save_credit_ledger(ledger)
+        stop_pipeline_permanently(
+            f"Remaining free credit (฿{remaining:,.2f}) reached safety reserve (฿{reserve:,.2f}). "
+            f"Stopping before any real money is charged!"
+        )
+        return False
+
+    # Verify live GCP Billing Account status
+    if GCP_PROJECT_ID:
+        try:
+            creds, _ = google.auth.default(
+                scopes=[
+                    "https://www.googleapis.com/auth/cloud-platform",
+                    "https://www.googleapis.com/auth/cloud-billing.readonly",
+                ]
+            )
+            creds.refresh(google.auth.transport.requests.Request())
+            headers = {
+                "Authorization": f"Bearer {creds.token}",
+                "X-Goog-User-Project": GCP_PROJECT_ID,
+            }
+            r = requests.get(
+                f"https://cloudbilling.googleapis.com/v1/projects/{GCP_PROJECT_ID}/billingInfo",
+                headers=headers,
+                timeout=15,
+            )
+            if r.status_code == 200:
+                binfo = r.json()
+                expected_ba = cg.get("billing_account", "billingAccounts/018618-DCC1D7-B99500")
+                if not binfo.get("billingEnabled") or binfo.get("billingAccountName") != expected_ba:
+                    stop_pipeline_permanently(f"Unexpected billing account state: {binfo}")
+                    return False
+        except Exception as e:
+            log_message(f"[Credit Guard] Billing API check note: {e}")
+
+    ledger["last_checked"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    save_credit_ledger(ledger)
+    return True
+
+
+def record_vertex_usage(model_name: str, response, cfg: dict):
+    ledger = load_credit_ledger(cfg)
+    usage = getattr(response, "usage_metadata", None)
+    in_tokens = getattr(usage, "prompt_token_count", 600) or 600
+    out_tokens = (getattr(usage, "candidates_token_count", 1800) or 1800) + (
+        getattr(usage, "thoughts_token_count", 800) or 800
+    )
+
+    # Estimate USD cost with conservative safety margin, convert at 35 THB/USD
+    if "pro" in model_name.lower():
+        usd_cost = (in_tokens / 1_000_000.0) * 1.25 + (out_tokens / 1_000_000.0) * 10.00
+    else:
+        usd_cost = (in_tokens / 1_000_000.0) * 0.30 + (out_tokens / 1_000_000.0) * 2.50
+
+    thb_cost = round(max(usd_cost * 35.0, 0.05), 4)
+    ledger["pipeline_used_thb"] = round(float(ledger.get("pipeline_used_thb", 0.0)) + thb_cost, 4)
+    ledger["remaining_free_credits_thb"] = round(
+        float(ledger["total_free_credits_thb"])
+        - float(ledger["initial_used_credits_thb"])
+        - ledger["pipeline_used_thb"],
+        4,
+    )
+    ledger["articles_generated"] = int(ledger.get("articles_generated", 0)) + 1
+    ledger["last_checked"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    save_credit_ledger(ledger)
+    log_message(
+        f"[Credit Guard] Deducted ฿{thb_cost:.4f} from Free Credits ({in_tokens} in / {out_tokens} out tokens). "
+        f"Estimated Free Credit Remaining: ฿{ledger['remaining_free_credits_thb']:,.2f}"
+    )
 
 
 def upload_to_gcs(local_path: Path, destination_blob_name: str, content_type: str = "text/plain") -> bool:
@@ -269,13 +406,14 @@ def rebuild_site_index(manifest: list, cfg: dict):
 
 
 def generate_article(cfg: dict):
+    check_credit_guard(cfg)
+
     niches = cfg["content_settings"]["niches"]
     angles = cfg["content_settings"].get(
         "article_angles",
         ["In-Depth Buyer's Guide", "Step-by-Step Setup Tutorial", "Hands-On Review & Comparison"],
     )
     manifest = load_manifest()
-    # Rotate niche based on current article count so all 3 niches get equal coverage
     selected_niche = niches[len(manifest) % len(niches)]
     selected_angle = random.choice(angles)
 
@@ -312,11 +450,11 @@ def generate_article(cfg: dict):
         ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-31b-it"],
     )
 
-    # 1. Try Vertex AI model pool (automatic failover across models)
+    # 1. Try Vertex AI model pool (uses the ฿34,972 GCP Free Credit on project-86010b3e-ea84-4c5a-8ec)
     if GCP_PROJECT_ID:
         for model_name in vertex_models:
             try:
-                log_message(f"[Vertex AI] Trying model '{model_name}' on project {GCP_PROJECT_ID}...")
+                log_message(f"[Vertex AI Free Credit] Trying model '{model_name}' on project {GCP_PROJECT_ID}...")
                 vertex_client = genai.Client(
                     vertexai=True,
                     project=GCP_PROJECT_ID,
@@ -328,16 +466,17 @@ def generate_article(cfg: dict):
                     config=gen_config,
                 )
                 if response and response.text:
-                    log_message(f"[Vertex AI] Article generated successfully using '{model_name}'!")
+                    log_message(f"[Vertex AI Free Credit] Article generated successfully using '{model_name}'!")
+                    record_vertex_usage(model_name, response, cfg)
                     return response.text, selected_niche
             except Exception as e:
                 log_message(f"[Vertex AI] Model '{model_name}' unavailable/exhausted ({str(e)[:140]}). Switching to next model...")
 
-    # 2. Try Gemini API Key model pool (automatic failover across models)
+    # 2. Try Gemini API Key model pool (Free Tier 0 THB on AI Studio)
     if GEMINI_API_KEY and GEMINI_API_KEY != "your_actual_gemini_api_key_here":
         for model_name in api_key_models:
             try:
-                log_message(f"[Gemini API] Trying fallback model '{model_name}'...")
+                log_message(f"[Gemini Free Tier API] Trying fallback model '{model_name}'...")
                 api_client = genai.Client(api_key=GEMINI_API_KEY)
                 response = api_client.models.generate_content(
                     model=model_name,
@@ -345,10 +484,10 @@ def generate_article(cfg: dict):
                     config=gen_config,
                 )
                 if response and response.text:
-                    log_message(f"[Gemini API] Article generated successfully using '{model_name}'!")
+                    log_message(f"[Gemini Free Tier API] Article generated successfully using '{model_name}' (Cost: ฿0.00)!")
                     return response.text, selected_niche
             except Exception as e:
-                log_message(f"[Gemini API] Model '{model_name}' unavailable/exhausted ({str(e)[:140]}). Switching to next model...")
+                log_message(f"[Gemini Free Tier API] Model '{model_name}' unavailable/exhausted ({str(e)[:140]}). Switching to next model...")
 
     log_message("ERROR: All configured models across Vertex AI and Gemini API failed.")
     return None, selected_niche
@@ -429,6 +568,7 @@ def publish_content(html_content: str, niche: str, cfg: dict):
 
 def run_once(force: bool = False):
     cfg = load_config()
+    check_credit_guard(cfg)
     if not force:
         manifest = load_manifest()
         if manifest:
@@ -453,10 +593,12 @@ def run_once(force: bool = False):
 if __name__ == "__main__":
     if "--loop" in sys.argv:
         interval_mins = config.get("system", {}).get("interval_minutes", 20)
-        log_message(f"Starting continuous autonomous loop (every {interval_mins} minutes)...")
+        log_message(f"Starting continuous autonomous loop (every {interval_mins} minutes) with Credit Guard enabled...")
         while True:
             try:
                 run_once()
+            except SystemExit:
+                raise
             except Exception as err:
                 log_message(f"Unexpected loop error: {err}")
             log_message(f"Sleeping for {interval_mins} minutes until next generation cycle...")

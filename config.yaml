@@ -1,6 +1,6 @@
 ﻿system:
   name: "Antigravity Autonomous Content Pipeline"
-  version: "2.0.0"
+  version: "2.1.0"
   timezone: "Asia/Bangkok"
   interval_minutes: 20
   site_url: "https://ednakrabgit.github.io/review"
@@ -12,6 +12,15 @@
     - "review"
   site_title: "Tech & Smart Living Reviews"
   site_description: "Expert reviews, smart home automation guides, and developer productivity tools."
+
+credit_guard:
+  enabled: true
+  stop_when_paid: true
+  billing_account: "billingAccounts/018618-DCC1D7-B99500"
+  total_free_credits_thb: 42704.00
+  initial_used_credits_thb: 7732.00
+  safety_reserve_thb: 500.00
+  max_pipeline_credit_budget_thb: 34472.00
 
 ai_engine:
   provider: "google"
