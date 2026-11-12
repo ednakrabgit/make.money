@@ -1,5 +1,7 @@
 import os
 import re
+import sys
+import time
 import json
 import yaml
 import requests
@@ -16,8 +18,14 @@ PROJECT_DIR = Path(r"E:\app\make.money\1")
 load_dotenv(PROJECT_DIR / ".env", override=True)
 
 config_path = PROJECT_DIR / "config.yaml"
-with open(config_path, "r", encoding="utf-8") as f:
-    config = yaml.safe_load(f)
+
+
+def load_config():
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+config = load_config()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", config.get("gcp", {}).get("project_id"))
@@ -25,20 +33,6 @@ GCP_LOCATION = os.getenv("GCP_LOCATION", config.get("gcp", {}).get("location", "
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", config.get("gcp", {}).get("gcs_bucket"))
 TARGET_API_URL = os.getenv("TARGET_API_URL")
 TARGET_API_TOKEN = os.getenv("TARGET_API_TOKEN")
-
-AI_MODEL = config["ai_engine"]["model"]
-FALLBACK_MODEL = config["ai_engine"].get("fallback_model", "gemini-3.6-flash")
-TEMPERATURE = config["ai_engine"].get("temperature", 0.7)
-MAX_OUTPUT_TOKENS = config["ai_engine"].get("max_output_tokens", 8192)
-
-NICHES = config["content_settings"]["niches"]
-DEFAULT_STATUS = config["content_settings"]["default_post_status"]
-AUTO_PUSH_PAGES = config["content_settings"].get("auto_push_github_pages", True)
-AFFILIATE_LINKS = config.get("affiliate_links", {})
-
-SITE_URL = config["system"].get("site_url", "https://ednakrabgit.github.io/make.money")
-SITE_TITLE = config["system"].get("site_title", "Tech & Smart Living Insights")
-SITE_DESC = config["system"].get("site_description", "Expert reviews, smart home automation guides, and developer productivity tools.")
 
 DOCS_DIR = PROJECT_DIR / "docs"
 ARTICLES_DIR = DOCS_DIR / "articles"
@@ -52,7 +46,7 @@ ARTICLES_DIR.mkdir(parents=True, exist_ok=True)
 def log_message(message: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_line = f"[{timestamp}] {message}"
-    print(log_line)
+    print(log_line, flush=True)
     with open(LOG_PATH, "a", encoding="utf-8") as log_file:
         log_file.write(log_line + "\n")
 
@@ -70,6 +64,21 @@ def upload_to_gcs(local_path: Path, destination_blob_name: str, content_type: st
     except Exception as e:
         log_message(f"GCS upload error ({destination_blob_name}): {e}")
         return False
+
+
+def load_manifest() -> list:
+    if MANIFEST_PATH.exists():
+        try:
+            with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
+def save_manifest(manifest: list):
+    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
 
 
 def clean_html_and_extract_meta(raw_text: str, default_niche: str):
@@ -99,8 +108,8 @@ def clean_html_and_extract_meta(raw_text: str, default_niche: str):
     return title, excerpt, body_html
 
 
-def render_affiliate_cards(niche: str) -> str:
-    items = AFFILIATE_LINKS.get(niche, [])
+def render_affiliate_cards(niche: str, affiliate_links: dict) -> str:
+    items = affiliate_links.get(niche, [])
     if not items:
         return ""
     cards = []
@@ -128,14 +137,15 @@ def render_affiliate_cards(niche: str) -> str:
     """
 
 
-def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date_str: str) -> str:
-    deals_section = render_affiliate_cards(niche)
+def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date_str: str, cfg: dict) -> str:
+    site_title = cfg["system"].get("site_title", "Tech & Smart Living Reviews")
+    deals_section = render_affiliate_cards(niche, cfg.get("affiliate_links", {}))
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} | {SITE_TITLE}</title>
+    <title>{title} | {site_title}</title>
     <meta name="description" content="{excerpt}">
     <style>
         :root {{ --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8; --cta: #f97316; }}
@@ -169,7 +179,7 @@ def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date
 <body>
     <header>
         <div class="nav">
-            <a href="../index.html" class="brand">{SITE_TITLE}</a>
+            <a href="../index.html" class="brand">{site_title}</a>
             <a href="../index.html" class="back-link">&larr; All Articles</a>
         </div>
     </header>
@@ -184,13 +194,15 @@ def wrap_article_page(title: str, excerpt: str, body_html: str, niche: str, date
         </article>
     </main>
     <footer>
-        &copy; {datetime.now().year} {SITE_TITLE}. Powered by Antigravity Autonomous Content Pipeline.
+        &copy; {datetime.now().year} {site_title}. Powered by Antigravity Autonomous Content Pipeline.
     </footer>
 </body>
 </html>"""
 
 
-def rebuild_site_index(manifest: list):
+def rebuild_site_index(manifest: list, cfg: dict):
+    site_title = cfg["system"].get("site_title", "Tech & Smart Living Reviews")
+    site_desc = cfg["system"].get("site_description", "Expert reviews, smart home automation guides, and developer productivity tools.")
     cards_html = []
     for item in manifest:
         cards_html.append(
@@ -212,8 +224,8 @@ def rebuild_site_index(manifest: list):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{SITE_TITLE}</title>
-    <meta name="description" content="{SITE_DESC}">
+    <title>{site_title}</title>
+    <meta name="description" content="{site_desc}">
     <style>
         :root {{ --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8; }}
         * {{ box-sizing: border-box; }}
@@ -235,8 +247,8 @@ def rebuild_site_index(manifest: list):
 </head>
 <body>
     <section class="hero">
-        <h1>{SITE_TITLE}</h1>
-        <p>{SITE_DESC}</p>
+        <h1>{site_title}</h1>
+        <p>{site_desc}</p>
     </section>
     <main>
         <div class="grid">
@@ -244,7 +256,7 @@ def rebuild_site_index(manifest: list):
         </div>
     </main>
     <footer>
-        &copy; {datetime.now().year} {SITE_TITLE}. Updated daily by Antigravity Autonomous Content Pipeline.
+        &copy; {datetime.now().year} {site_title}. Updated automatically every 20 minutes by Antigravity Autonomous Content Pipeline.
     </footer>
 </body>
 </html>"""
@@ -252,53 +264,80 @@ def rebuild_site_index(manifest: list):
     index_file = DOCS_DIR / "index.html"
     with open(index_file, "w", encoding="utf-8") as f:
         f.write(index_html)
-    log_message(f"Updated static site homepage: {index_file}")
+    log_message(f"Updated static site homepage: {index_file} (Total articles: {len(manifest)})")
     upload_to_gcs(index_file, "site/index.html", content_type="text/html; charset=utf-8")
 
 
-def generate_article():
-    selected_niche = random.choice(NICHES)
-    niche_links = AFFILIATE_LINKS.get(selected_niche, [])
+def generate_article(cfg: dict):
+    niches = cfg["content_settings"]["niches"]
+    angles = cfg["content_settings"].get(
+        "article_angles",
+        ["In-Depth Buyer's Guide", "Step-by-Step Setup Tutorial", "Hands-On Review & Comparison"],
+    )
+    manifest = load_manifest()
+    # Rotate niche based on current article count so all 3 niches get equal coverage
+    selected_niche = niches[len(manifest) % len(niches)]
+    selected_angle = random.choice(angles)
+
+    existing_titles = [m.get("title", "") for m in manifest[:15]]
+    avoid_list = "\n".join([f"- {t}" for t in existing_titles if t])
+
+    affiliate_links = cfg.get("affiliate_links", {})
+    niche_links = affiliate_links.get(selected_niche, [])
     affiliate_context = "\n".join(
         [f"- {item['name']}: {item['url']} ({item.get('description', '')})" for item in niche_links]
     )
 
     prompt = (
-        f"Write an SEO-optimized, in-depth article in English (approx 900 words) "
-        f"focusing on the niche: '{selected_niche}'.\n"
-        f"Include an engaging <h1> title, clear <h2> and <h3> subheadings, practical tips, "
-        f"and naturally recommend these affiliate resources with clickable HTML <a> links:\n"
+        f"Write a fresh, unique, SEO-optimized article in English (approx 900 words) "
+        f"focusing on the niche: '{selected_niche}' with the specific angle: '{selected_angle}'.\n"
+        f"IMPORTANT: Pick a specific, high-intent long-tail topic and DO NOT repeat any of these existing titles:\n"
+        f"{avoid_list}\n\n"
+        f"Include an engaging <h1> title, clear <h2> and <h3> subheadings, actionable advice, "
+        f"and naturally recommend these affiliate products with clickable HTML <a> links:\n"
         f"{affiliate_context}\n"
         f"Return clean HTML inside <body> tags only (do not wrap in markdown code fences)."
     )
+
+    temperature = cfg["ai_engine"].get("temperature", 0.75)
+    max_tokens = cfg["ai_engine"].get("max_output_tokens", 8192)
     gen_config = types.GenerateContentConfig(
-        temperature=TEMPERATURE,
-        max_output_tokens=MAX_OUTPUT_TOKENS,
+        temperature=temperature,
+        max_output_tokens=max_tokens,
     )
 
-    if GCP_PROJECT_ID:
-        try:
-            log_message(f"Connecting to Google AI Pro via Vertex AI ({GCP_PROJECT_ID} / {AI_MODEL})...")
-            vertex_client = genai.Client(
-                vertexai=True,
-                project=GCP_PROJECT_ID,
-                location=GCP_LOCATION,
-            )
-            response = vertex_client.models.generate_content(
-                model=AI_MODEL,
-                contents=prompt,
-                config=gen_config,
-            )
-            if response and response.text:
-                log_message(f"Article generated successfully via Vertex AI ({AI_MODEL})!")
-                return response.text, selected_niche
-        except Exception as e:
-            log_message(f"Vertex AI generation warning: {e}. Trying API Key fallback...")
+    vertex_models = cfg["ai_engine"].get("vertex_models", [cfg["ai_engine"].get("model", "gemini-2.5-pro")])
+    api_key_models = cfg["ai_engine"].get(
+        "api_key_models",
+        ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-31b-it"],
+    )
 
-    if GEMINI_API_KEY and GEMINI_API_KEY != "your_actual_gemini_api_key_here":
-        for model_name in [AI_MODEL, FALLBACK_MODEL]:
+    # 1. Try Vertex AI model pool (automatic failover across models)
+    if GCP_PROJECT_ID:
+        for model_name in vertex_models:
             try:
-                log_message(f"Connecting to Gemini API ({model_name})...")
+                log_message(f"[Vertex AI] Trying model '{model_name}' on project {GCP_PROJECT_ID}...")
+                vertex_client = genai.Client(
+                    vertexai=True,
+                    project=GCP_PROJECT_ID,
+                    location=GCP_LOCATION,
+                )
+                response = vertex_client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=gen_config,
+                )
+                if response and response.text:
+                    log_message(f"[Vertex AI] Article generated successfully using '{model_name}'!")
+                    return response.text, selected_niche
+            except Exception as e:
+                log_message(f"[Vertex AI] Model '{model_name}' unavailable/exhausted ({str(e)[:140]}). Switching to next model...")
+
+    # 2. Try Gemini API Key model pool (automatic failover across models)
+    if GEMINI_API_KEY and GEMINI_API_KEY != "your_actual_gemini_api_key_here":
+        for model_name in api_key_models:
+            try:
+                log_message(f"[Gemini API] Trying fallback model '{model_name}'...")
                 api_client = genai.Client(api_key=GEMINI_API_KEY)
                 response = api_client.models.generate_content(
                     model=model_name,
@@ -306,38 +345,24 @@ def generate_article():
                     config=gen_config,
                 )
                 if response and response.text:
-                    log_message(f"Article generated successfully via API Key ({model_name})!")
+                    log_message(f"[Gemini API] Article generated successfully using '{model_name}'!")
                     return response.text, selected_niche
             except Exception as e:
-                log_message(f"API Key generation error ({model_name}): {e}")
+                log_message(f"[Gemini API] Model '{model_name}' unavailable/exhausted ({str(e)[:140]}). Switching to next model...")
 
+    log_message("ERROR: All configured models across Vertex AI and Gemini API failed.")
     return None, selected_niche
 
 
-def load_manifest() -> list:
-    if MANIFEST_PATH.exists():
-        try:
-            with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
-
-
-def save_manifest(manifest: list):
-    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2, ensure_ascii=False)
-
-
-def push_to_github_pages(commit_msg: str):
-    if not AUTO_PUSH_PAGES:
+def push_to_github_pages(commit_msg: str, cfg: dict):
+    if not cfg["content_settings"].get("auto_push_github_pages", True):
         return
     try:
         subprocess.run(["git", "add", "docs/"], cwd=PROJECT_DIR, check=True, capture_output=True)
         status = subprocess.run(["git", "status", "--porcelain", "docs/"], cwd=PROJECT_DIR, capture_output=True, text=True)
         if status.stdout.strip():
             subprocess.run(["git", "commit", "-m", commit_msg], cwd=PROJECT_DIR, check=True, capture_output=True)
-        remotes = config.get("system", {}).get("git_remotes", ["origin", "review"])
+        remotes = cfg.get("system", {}).get("git_remotes", ["origin", "review"])
         for remote_name in remotes:
             res = subprocess.run(["git", "push", remote_name, "main"], cwd=PROJECT_DIR, capture_output=True, text=True)
             if res.returncode == 0:
@@ -348,21 +373,21 @@ def push_to_github_pages(commit_msg: str):
         log_message(f"GitHub Pages git push warning: {e}")
 
 
-def publish_content(html_content: str, niche: str):
+def publish_content(html_content: str, niche: str, cfg: dict):
     if not html_content:
         log_message("No content to publish.")
         return False
 
     now = datetime.now()
     timestamp_str = now.strftime("%Y%m%d_%H%M%S")
-    date_str = now.strftime("%Y-%m-%d")
+    date_str = now.strftime("%Y-%m-%d %H:%M")
     title, excerpt, body_html = clean_html_and_extract_meta(html_content, niche)
 
-    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60] or f"post-{timestamp_str}"
-    filename = f"{now.strftime('%Y-%m-%d')}-{slug}.html"
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:55] or f"post-{timestamp_str}"
+    filename = f"{now.strftime('%Y-%m-%d-%H%M')}-{slug}.html"
     article_path = ARTICLES_DIR / filename
 
-    full_page_html = wrap_article_page(title, excerpt, body_html, niche, date_str)
+    full_page_html = wrap_article_page(title, excerpt, body_html, niche, date_str, cfg)
     with open(article_path, "w", encoding="utf-8") as f:
         f.write(full_page_html)
     log_message(f"Saved published article to {article_path}")
@@ -380,16 +405,16 @@ def publish_content(html_content: str, niche: str):
         },
     )
     save_manifest(manifest)
-    rebuild_site_index(manifest)
+    rebuild_site_index(manifest, cfg)
 
-    articles_prefix = config.get("gcp", {}).get("gcs_articles_prefix", "articles")
+    articles_prefix = cfg.get("gcp", {}).get("gcs_articles_prefix", "articles")
     upload_to_gcs(article_path, f"{articles_prefix}/{filename}", content_type="text/html; charset=utf-8")
 
-    push_to_github_pages(f"Publish article: {title}")
+    push_to_github_pages(f"Publish article: {title}", cfg)
 
     if TARGET_API_URL and "your-blog-site.com" not in TARGET_API_URL:
         headers = {"Authorization": f"Bearer {TARGET_API_TOKEN}", "Content-Type": "application/json"}
-        payload = {"title": title, "content": full_page_html, "status": DEFAULT_STATUS}
+        payload = {"title": title, "content": full_page_html, "status": cfg["content_settings"]["default_post_status"]}
         try:
             response = requests.post(TARGET_API_URL, json=payload, headers=headers, timeout=30)
             if response.status_code in [200, 201]:
@@ -402,32 +427,39 @@ def publish_content(html_content: str, niche: str):
     return True
 
 
-def migrate_existing_drafts():
-    manifest = load_manifest()
-    if manifest:
-        return
-    drafts = sorted(PROJECT_DIR.glob("draft_post_*.html"))
-    for draft in drafts:
-        raw = draft.read_text(encoding="utf-8")
-        niche = "Smart Home Automation" if "smart home" in raw.lower() else "Developer Productivity Hacks"
-        title, excerpt, body_html = clean_html_and_extract_meta(raw, niche)
-        date_str = datetime.now().strftime("%Y-%m-%d")
-        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60]
-        filename = f"{date_str}-{slug}.html"
-        article_path = ARTICLES_DIR / filename
-        full_page_html = wrap_article_page(title, excerpt, body_html, niche, date_str)
-        article_path.write_text(full_page_html, encoding="utf-8")
-        manifest.insert(0, {"title": title, "excerpt": excerpt, "niche": niche, "date": date_str, "filename": filename})
-    if manifest:
-        save_manifest(manifest)
-        rebuild_site_index(manifest)
+def run_once(force: bool = False):
+    cfg = load_config()
+    if not force:
+        manifest = load_manifest()
+        if manifest:
+            last_date_str = manifest[0].get("date", "")
+            try:
+                last_dt = datetime.strptime(last_date_str, "%Y-%m-%d %H:%M")
+                elapsed_mins = (datetime.now() - last_dt).total_seconds() / 60.0
+                if 0 <= elapsed_mins < 15:
+                    log_message(f"Skipping cycle: Last article was published {elapsed_mins:.1f} mins ago (< 15 mins).")
+                    return True
+            except Exception:
+                pass
+    log_message("=== Autonomous Pipeline Execution Started ===")
+    article, selected_niche = generate_article(cfg)
+    success = publish_content(article, selected_niche, cfg)
+    log_message("=== Pipeline Execution Finished ===")
+    logs_prefix = cfg.get("gcp", {}).get("gcs_logs_prefix", "logs")
+    upload_to_gcs(LOG_PATH, f"{logs_prefix}/pipeline.log", content_type="text/plain; charset=utf-8")
+    return success
 
 
 if __name__ == "__main__":
-    log_message("=== Autonomous Pipeline Execution Started ===")
-    migrate_existing_drafts()
-    article, selected_niche = generate_article()
-    success = publish_content(article, selected_niche)
-    log_message("=== Pipeline Execution Finished ===")
-    logs_prefix = config.get("gcp", {}).get("gcs_logs_prefix", "logs")
-    upload_to_gcs(LOG_PATH, f"{logs_prefix}/pipeline.log", content_type="text/plain; charset=utf-8")
+    if "--loop" in sys.argv:
+        interval_mins = config.get("system", {}).get("interval_minutes", 20)
+        log_message(f"Starting continuous autonomous loop (every {interval_mins} minutes)...")
+        while True:
+            try:
+                run_once()
+            except Exception as err:
+                log_message(f"Unexpected loop error: {err}")
+            log_message(f"Sleeping for {interval_mins} minutes until next generation cycle...")
+            time.sleep(interval_mins * 60)
+    else:
+        run_once(force=("--force" in sys.argv))

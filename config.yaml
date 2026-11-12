@@ -1,8 +1,8 @@
 ﻿system:
   name: "Antigravity Autonomous Content Pipeline"
-  version: "1.2.0"
+  version: "2.0.0"
   timezone: "Asia/Bangkok"
-  execution_time: "18:00"
+  interval_minutes: 20
   site_url: "https://ednakrabgit.github.io/review"
   mirror_site_urls:
     - "https://ednakrabgit.github.io/review"
@@ -16,8 +16,18 @@
 ai_engine:
   provider: "google"
   model: "gemini-2.5-pro"
-  fallback_model: "gemini-3.6-flash"
-  temperature: 0.7
+  vertex_models:
+    - "gemini-2.5-pro"
+    - "gemini-2.5-flash"
+    - "gemini-2.0-flash"
+  api_key_models:
+    - "gemini-3.6-flash"
+    - "gemini-3.5-flash"
+    - "gemini-3.5-flash-lite"
+    - "gemini-3.1-flash-lite"
+    - "gemma-4-31b-it"
+    - "gemma-4-26b-a4b-it"
+  temperature: 0.75
   max_output_tokens: 8192
 
 gcp:
@@ -34,6 +44,15 @@ content_settings:
     - "Software Development Tools"
     - "Smart Home Automation"
     - "Developer Productivity Hacks"
+  article_angles:
+    - "In-Depth Buyer's Guide & Comparison"
+    - "Step-by-Step Practical Setup Tutorial"
+    - "Top 7 Mistakes to Avoid & Pro Tips"
+    - "Cost-Benefit & ROI Breakdown for Beginners"
+    - "Real-World Workflow & Automation Blueprint"
+    - "Hands-On Review & Performance Benchmark"
+    - "2026 Ultimate Upgrade Guide on a Budget"
+    - "Troubleshooting & Optimization Masterclass"
   default_post_status: "publish"
   auto_push_github_pages: true
 
