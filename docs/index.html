@@ -13,16 +13,14 @@
         .hero h1 { font-size: 2.5rem; margin: 0 0 0.75rem; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .hero p { color: var(--muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
         main { max-width: 1040px; margin: 3rem auto; padding: 0 1.5rem 4rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1.75rem; }
-        .card { background: var(--card); border: 1px solid #334155; border-radius: 16px; overflow: hidden; text-decoration: none; color: var(--text); display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--card); border: 1px solid #334155; border-radius: 16px; padding: 1.75rem; text-decoration: none; color: var(--text); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, border-color 0.2s; }
         .card:hover { transform: translateY(-4px); border-color: var(--accent); }
-        .card-thumb { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid #334155; }
-        .card-content { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
         .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
         .badge { background: rgba(56,189,248,0.15); color: var(--accent); padding: 0.2rem 0.65rem; border-radius: 999px; font-weight: 600; }
-        .card h2 { font-size: 1.25rem; margin: 0.25rem 0 0.75rem; color: #fff; line-height: 1.35; }
+        .card h2 { font-size: 1.3rem; margin: 0.25rem 0 0.75rem; color: #fff; line-height: 1.35; }
         .card p { color: var(--muted); font-size: 0.95rem; margin: 0 0 1.25rem; }
-        .read-more { color: var(--accent); font-weight: 600; font-size: 0.9rem; margin-top: auto; }
+        .read-more { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
         footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid #334155; }
     </style>
 </head>
@@ -34,121 +32,104 @@
     <main>
         <div class="grid">
             
-            <a href="articles/2026-11-13-0625-from-friction-to-flow-7-developer-habits-that-are-drain.html" class="card">
-                <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80" alt="From Friction to Flow: 7 Developer Habits That Are Draining Your Productivity (And How to Fix Them)" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Developer Productivity Hacks</span>
-                        <span>2026-11-13 06:25</span>
-                    </div>
-                    <h2>From Friction to Flow: 7 Developer Habits That Are Draining Your Productivity (And How to Fix Them)</h2>
-                    <p>It’s a familiar feeling for many developers: a day packed with activity—pull requests, Slack messages, meetings, and frantic coding—that ends with a nagging sense of having accompl...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+            <a href="articles/2026-11-13-1651-beyond-the-free-tier-a-beginner-s-roi-guide-to-investin.html" class="card">
+                <div class="card-meta">
+                    <span class="badge">Software Development Tools</span>
+                    <span>2026-11-13 16:51</span>
                 </div>
+                <h2>Beyond the Free Tier: A Beginner's ROI Guide to Investing in Your Dev Toolkit</h2>
+                <p>You did it. After countless hours of tutorials, portfolio projects, and nerve-wracking interviews, you’ve landed your first developer job or a significant freelance contract. Along...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
+            </a>
+            
+            <a href="articles/2026-11-13-0625-from-friction-to-flow-7-developer-habits-that-are-drain.html" class="card">
+                <div class="card-meta">
+                    <span class="badge">Developer Productivity Hacks</span>
+                    <span>2026-11-13 06:25</span>
+                </div>
+                <h2>From Friction to Flow: 7 Developer Habits That Are Draining Your Productivity (And How to Fix Them)</h2>
+                <p>It’s a familiar feeling for many developers: a day packed with activity—pull requests, Slack messages, meetings, and frantic coding—that ends with a nagging sense of having accompl...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-0619-unlocking-your-smart-home-the-definitive-guide-to-start.html" class="card">
-                <img src="https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80" alt="Unlocking Your Smart Home: The Definitive Guide to Starting with Plugs vs. Hubs" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Smart Home Automation</span>
-                        <span>2026-11-13 06:19</span>
-                    </div>
-                    <h2>Unlocking Your Smart Home: The Definitive Guide to Starting with Plugs vs. Hubs</h2>
-                    <p>The dream of a fully automated home—where lights adjust to the time of day and your coffee maker starts before you're out of bed—is more accessible than ever. Yet, taking that firs...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Smart Home Automation</span>
+                    <span>2026-11-13 06:19</span>
                 </div>
+                <h2>Unlocking Your Smart Home: The Definitive Guide to Starting with Plugs vs. Hubs</h2>
+                <p>The dream of a fully automated home—where lights adjust to the time of day and your coffee maker starts before you're out of bed—is more accessible than ever. Yet, taking that firs...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-0604-escape-the-productivity-trap-7-costly-mistakes-develope.html" class="card">
-                <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80" alt="Escape the Productivity Trap: 7 Costly Mistakes Developers Make (And How to Fix Them)" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Developer Productivity Hacks</span>
-                        <span>2026-11-13 06:04</span>
-                    </div>
-                    <h2>Escape the Productivity Trap: 7 Costly Mistakes Developers Make (And How to Fix Them)</h2>
-                    <p>You know the feeling. You’ve been at your desk for eight hours, the IDE is glowing, and you’ve typed thousands of characters. Yet, when you look back at your commit history, it fee...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Developer Productivity Hacks</span>
+                    <span>2026-11-13 06:04</span>
                 </div>
+                <h2>Escape the Productivity Trap: 7 Costly Mistakes Developers Make (And How to Fix Them)</h2>
+                <p>You know the feeling. You’ve been at your desk for eight hours, the IDE is glowing, and you’ve typed thousands of characters. Yet, when you look back at your commit history, it fee...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-0604-is-your-workflow-sabotaging-your-code-7-developer-produ.html" class="card">
-                <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80" alt="Is Your Workflow Sabotaging Your Code? 7 Developer Productivity Traps &amp; How to Escape Them" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Developer Productivity Hacks</span>
-                        <span>2026-11-13 06:04</span>
-                    </div>
-                    <h2>Is Your Workflow Sabotaging Your Code? 7 Developer Productivity Traps &amp; How to Escape Them</h2>
-                    <p>You’ve been there. It’s 4 PM, and you’ve spent the entire day wrestling with your development environment, chasing elusive bugs born from a moment of distraction, or just feeling l...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Developer Productivity Hacks</span>
+                    <span>2026-11-13 06:04</span>
                 </div>
+                <h2>Is Your Workflow Sabotaging Your Code? 7 Developer Productivity Traps &amp; How to Escape Them</h2>
+                <p>You’ve been there. It’s 4 PM, and you’ve spent the entire day wrestling with your development environment, chasing elusive bugs born from a moment of distraction, or just feeling l...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-0540-beyond-the-ide-your-2026-guide-to-essential-hardware-up.html" class="card">
-                <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80" alt="Beyond the IDE: Your 2026 Guide to Essential Hardware Upgrades on a Shoestring Budget" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Software Development Tools</span>
-                        <span>2026-11-13 05:40</span>
-                    </div>
-                    <h2>Beyond the IDE: Your 2026 Guide to Essential Hardware Upgrades on a Shoestring Budget</h2>
-                    <p>As software developers, we obsess over our digital toolchains. We debate the merits of VS Code versus JetBrains, argue about the fastest JavaScript frameworks, and meticulously con...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Software Development Tools</span>
+                    <span>2026-11-13 05:40</span>
                 </div>
+                <h2>Beyond the IDE: Your 2026 Guide to Essential Hardware Upgrades on a Shoestring Budget</h2>
+                <p>As software developers, we obsess over our digital toolchains. We debate the merits of VS Code versus JetBrains, argue about the fastest JavaScript frameworks, and meticulously con...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-0539-beyond-the-ide-your-definitive-guide-to-choosing-the-be.html" class="card">
-                <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80" alt="Beyond the IDE: Your Definitive Guide to Choosing the Best Keyboard and Mouse for Programming" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Software Development Tools</span>
-                        <span>2026-11-13 05:39</span>
-                    </div>
-                    <h2>Beyond the IDE: Your Definitive Guide to Choosing the Best Keyboard and Mouse for Programming</h2>
-                    <p>As a software developer, you live in your Integrated Development Environment (IDE). You obsess over the perfect theme, font, and plugin combination to optimize your workflow. But w...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Software Development Tools</span>
+                    <span>2026-11-13 05:39</span>
                 </div>
+                <h2>Beyond the IDE: Your Definitive Guide to Choosing the Best Keyboard and Mouse for Programming</h2>
+                <p>As a software developer, you live in your Integrated Development Environment (IDE). You obsess over the perfect theme, font, and plugin combination to optimize your workflow. But w...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-smart-home-automation-your-ultimate-guide-to-a-smarter-simpl.html" class="card">
-                <img src="https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80" alt="Smart Home Automation: Your Ultimate Guide to a Smarter, Simpler Life" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Smart Home Automation</span>
-                        <span>2026-11-13</span>
-                    </div>
-                    <h2>Smart Home Automation: Your Ultimate Guide to a Smarter, Simpler Life</h2>
-                    <p>Imagine waking up not to a blaring alarm, but to your lights gently fading on, the coffee maker already brewing your morning cup, and your favorite playlist starting softly in the ...</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Smart Home Automation</span>
+                    <span>2026-11-13</span>
                 </div>
+                <h2>Smart Home Automation: Your Ultimate Guide to a Smarter, Simpler Life</h2>
+                <p>Imagine waking up not to a blaring alarm, but to your lights gently fading on, the coffee maker already brewing your morning cup, and your favorite playlist starting softly in the ...</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-smart-home-automation-your-ultimate-guide-to-a-more-convenie.html" class="card">
-                <img src="https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80" alt="Smart Home Automation: Your Ultimate Guide to a More Convenient, Secure, and Efficient Home" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Smart Home Automation</span>
-                        <span>2026-11-13</span>
-                    </div>
-                    <h2>Smart Home Automation: Your Ultimate Guide to a More Convenient, Secure, and Efficient Home</h2>
-                    <p>Imagine waking up not to a blaring alarm, but to your lights gradually brightening, your favorite morning playlist starting softly, and the coffee maker already brewing downstairs....</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Smart Home Automation</span>
+                    <span>2026-11-13</span>
                 </div>
+                <h2>Smart Home Automation: Your Ultimate Guide to a More Convenient, Secure, and Efficient Home</h2>
+                <p>Imagine waking up not to a blaring alarm, but to your lights gradually brightening, your favorite morning playlist starting softly, and the coffee maker already brewing downstairs....</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
             <a href="articles/2026-11-13-10-essential-software-development-tools-to-supercharge-devel.html" class="card">
-                <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80" alt="10 Essential Software Development Tools to Supercharge Developer Productivity" class="card-thumb" loading="lazy">
-                <div class="card-content">
-                    <div class="card-meta">
-                        <span class="badge">Developer Productivity Hacks</span>
-                        <span>2026-11-13</span>
-                    </div>
-                    <h2>10 Essential Software Development Tools to Supercharge Developer Productivity</h2>
-                    <p>Published on Modern Tech Insights | Reading Time: ~6 Minutes</p>
-                    <span class="read-more">Read Full Guide &rarr;</span>
+                <div class="card-meta">
+                    <span class="badge">Developer Productivity Hacks</span>
+                    <span>2026-11-13</span>
                 </div>
+                <h2>10 Essential Software Development Tools to Supercharge Developer Productivity</h2>
+                <p>Published on Modern Tech Insights | Reading Time: ~6 Minutes</p>
+                <span class="read-more">Read Full Guide &rarr;</span>
             </a>
             
         </div>
